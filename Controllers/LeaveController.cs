@@ -1,4 +1,5 @@
-﻿using EmployeePayroll.API.Services;
+﻿using EmployeePayroll.API.Models;
+using EmployeePayroll.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,14 +15,18 @@ namespace EmployeePayroll.API.Controllers
         {
             _leaveService = leaveService;
         }
-
         [HttpPost("apply")]
-        public async Task<IActionResult> ApplyLeave(int employeeId, DateTime fromDate, DateTime toDate, string reason)
+        public async Task<IActionResult> ApplyLeave([FromBody] LeaveRequest request)
         {
             try
             {
-                await _leaveService.ApplyLeaveAsync(employeeId, fromDate, toDate, reason);
-                return Ok("Leave applied successfully.");
+                await _leaveService.ApplyLeaveAsync(
+                    request.EmployeeId,
+                    request.FromDate,
+                    request.ToDate,
+                    request.Reason);
+
+                return Ok(new { message = "Leave applied successfully." });
             }
             catch (Exception ex)
             {
@@ -34,7 +39,7 @@ namespace EmployeePayroll.API.Controllers
             try
             {
                 await _leaveService.ApproveLeaveAsync(leaveId);
-                return Ok("Leave approved successfully.");
+                return Ok(new { message = "Leave approved successfully." });
             }
             catch (Exception ex)
             {
@@ -48,7 +53,7 @@ namespace EmployeePayroll.API.Controllers
             try
             {
                 await _leaveService.RejectLeaveAsync(leaveId);
-                return Ok("Leave rejected successfully.");
+                return Ok(new { message = "Leave rejected successfully." });
             }
             catch (Exception ex)
             {

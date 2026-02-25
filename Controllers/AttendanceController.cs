@@ -1,7 +1,9 @@
 ﻿using EmployeePayroll.API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.EntityFrameworkCore;
+using EmployeePayroll.API.Data;
 namespace EmployeePayroll.API.Controllers
 {
     [Route("api/[controller]")]
@@ -9,9 +11,10 @@ namespace EmployeePayroll.API.Controllers
     public class AttendanceController : ControllerBase
     {
         private readonly AttendanceService _attendanceService;
-
-        public AttendanceController(AttendanceService attendanceService)
+        private readonly ApplicationDbContext context;
+        public AttendanceController(AttendanceService attendanceService, ApplicationDbContext context)
         {
+            this.context = context;
             _attendanceService = attendanceService;
         }
 
@@ -21,7 +24,7 @@ namespace EmployeePayroll.API.Controllers
             try
             {
                 await _attendanceService.MarkLoginAsync(employeeId);
-                return Ok("Login attendance marked successfully.");
+                return Ok(new { message = "Login attendance marked successfully." });
             }
             catch (Exception ex)
             {
@@ -34,7 +37,7 @@ namespace EmployeePayroll.API.Controllers
             try
             {
                 await _attendanceService.MarkLogoutAsync(employeeId);
-                return Ok("Logout marked successfully.");
+                return Ok(new { message = "Logout marked successfully." });
             }
             catch (Exception ex)
             {
@@ -54,6 +57,23 @@ namespace EmployeePayroll.API.Controllers
                 .GetAttendancePercentageAsync(employeeId, month, year);
 
             return Ok(new { AttendancePercentage = percentage });
+        }
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginRequest request)
+        {
+            var user = context.Users
+                .FirstOrDefault(u =>
+                    u.Email == request.Email &&
+                    u.PasswordHash == request.Password);
+
+            if (user == null)
+                return BadRequest(new { message = "Invalid email or password" });
+
+            return Ok(new
+            {
+                employeeId = user.EmployeeId,
+                role = user.Role
+            });
         }
     }
 }
