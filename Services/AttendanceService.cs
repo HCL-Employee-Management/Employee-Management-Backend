@@ -45,7 +45,7 @@ namespace EmployeePayroll.API.Services
 
             attendance.LogoutTime = DateTime.Now;
 
-            // Calculate Total Hours
+           
             if (attendance.LoginTime.HasValue)
             {
                 var totalHours = (attendance.LogoutTime.Value - attendance.LoginTime.Value).TotalHours;

@@ -72,5 +72,20 @@ namespace EmployeePayroll.API.Services
                 .OrderByDescending(l => l.FromDate)
                 .ToListAsync();
         }
+        public async Task<List<object>> GetAllLeavesAsync()
+        {
+            return await _context.Leaves
+                .Include(l => l.Employee)
+                .Select(l => new
+                {
+                    l.LeaveId,
+                    employeeName = l.Employee.FirstName + " " + l.Employee.LastName,
+                    l.FromDate,
+                    l.ToDate,
+                    l.Reason,
+                    l.Status
+                })
+                .ToListAsync<object>();
+        }
     }
 }

@@ -71,9 +71,35 @@ namespace EmployeePayroll.API.Controllers
 
             return Ok(new
             {
-                employeeId = user.EmployeeId,
+                employeeId = user.EmployeeId,  // now nullable
                 role = user.Role
             });
+        }
+        [HttpGet("today")]
+        public async Task<IActionResult> GetTodayAttendance()
+        {
+            var today = DateTime.Today;
+
+            var employees = await context.Employees.ToListAsync();
+
+            var attendance = await context.Attendances
+                .Where(a => a.Date == today)
+                .ToListAsync();
+
+            var result = employees.Select(emp =>
+            {
+                var todayRecord = attendance
+                    .FirstOrDefault(a => a.EmployeeId == emp.EmployeeId);
+
+                return new
+                {
+                    employeeName = emp.FirstName + " " + emp.LastName,
+                    loginTime = todayRecord?.LoginTime,
+                    logoutTime = todayRecord?.LogoutTime
+                };
+            });
+
+            return Ok(result);
         }
     }
 }

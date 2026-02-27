@@ -66,5 +66,11 @@ namespace EmployeePayroll.API.Controllers
             var leaves = await _leaveService.GetLeaveHistoryAsync(employeeId);
             return Ok(leaves);
         }
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllLeaves()
+        {
+            var leaves = await _leaveService.GetAllLeavesAsync();
+            return Ok(leaves);
+        }
     }
 }
