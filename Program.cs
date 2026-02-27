@@ -1,6 +1,7 @@
 
 using EmployeePayroll.API.Data;
 using EmployeePayroll.API.Services;
+using EmployeePayroll.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeePayroll.API
@@ -20,6 +21,7 @@ namespace EmployeePayroll.API
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<AttendanceService>();
             builder.Services.AddScoped<LeaveService>();
+            builder.Services.AddScoped<IPayrollService, PayrollService>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
