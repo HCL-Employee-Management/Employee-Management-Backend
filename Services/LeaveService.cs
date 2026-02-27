@@ -28,7 +28,8 @@ namespace EmployeePayroll.API.Services
                 FromDate = fromDate,
                 ToDate = toDate,
                 Reason = reason,
-                Status = "Pending"
+                Status = "Pending",
+                AppliedDate = DateTime.Now
             };
 
             _context.Leaves.Add(leave);
