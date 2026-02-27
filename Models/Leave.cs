@@ -10,5 +10,6 @@
         public string Status { get; set; }
 
         public Employee Employee { get; set; }
+        public DateTime? AppliedDate { get; set; } = DateTime.Now;
     }
 }
