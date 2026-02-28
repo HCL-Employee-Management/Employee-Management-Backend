@@ -8,7 +8,7 @@
         public DateTime? LoginTime { get; set; }
         public DateTime? LogoutTime { get; set; }
         public decimal? TotalHours { get; set; }
-
+        public string? Status { get; set; } = "Absent";
         public Employee Employee { get; set; }
     }
     public class LoginRequest

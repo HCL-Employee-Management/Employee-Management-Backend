@@ -86,16 +86,47 @@ namespace EmployeePayroll.API.Controllers
                 .Where(a => a.Date == today)
                 .ToListAsync();
 
+            var leaves = await context.Leaves
+                .Where(l => l.FromDate <= today && l.ToDate >= today)
+                .ToListAsync();
+
             var result = employees.Select(emp =>
             {
                 var todayRecord = attendance
                     .FirstOrDefault(a => a.EmployeeId == emp.EmployeeId);
 
+                var leaveRecord = leaves
+                    .FirstOrDefault(l => l.EmployeeId == emp.EmployeeId);
+
+                string status;
+
+                if (leaveRecord != null)
+                {
+                    status = "On Leave";
+                }
+                else if (todayRecord == null)
+                {
+                    status = "Absent";
+                }
+                else if (todayRecord.LoginTime != null && todayRecord.LogoutTime == null)
+                {
+                    status = "Logged In";
+                }
+                else if (todayRecord.LoginTime != null && todayRecord.LogoutTime != null)
+                {
+                    status = "Logged Out";
+                }
+                else
+                {
+                    status = "Absent";
+                }
+
                 return new
                 {
                     employeeName = emp.FirstName + " " + emp.LastName,
                     loginTime = todayRecord?.LoginTime,
-                    logoutTime = todayRecord?.LogoutTime
+                    logoutTime = todayRecord?.LogoutTime,
+                    status = status
                 };
             });
 

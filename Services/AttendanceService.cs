@@ -45,11 +45,17 @@ namespace EmployeePayroll.API.Services
 
             attendance.LogoutTime = DateTime.Now;
 
-           
             if (attendance.LoginTime.HasValue)
             {
-                var totalHours = (attendance.LogoutTime.Value - attendance.LoginTime.Value).TotalHours;
+                var totalHours =
+                    (attendance.LogoutTime.Value - attendance.LoginTime.Value).TotalHours;
+
                 attendance.TotalHours = (decimal)totalHours;
+
+                if (totalHours >= 8)
+                    attendance.Status = "Present";
+                else
+                    attendance.Status = "Half Day";
             }
 
             await context.SaveChangesAsync();
@@ -61,21 +67,42 @@ namespace EmployeePayroll.API.Services
                 .OrderByDescending(a => a.Date)
                 .ToListAsync();
         }
-        public async Task<double> GetAttendancePercentageAsync(int employeeId, int month, int year)
+        public async Task<double> GetAttendancePercentageAsync(
+    int employeeId,
+    int month,
+    int year)
         {
             var records = await context.Attendances
                 .Where(a => a.EmployeeId == employeeId
-                            && a.Date.Month == month
-                            && a.Date.Year == year)
+                         && a.Date.Month == month
+                         && a.Date.Year == year)
                 .ToListAsync();
 
-            if (records.Count == 0)
+            double attendanceScore = 0;
+
+            foreach (var record in records)
+            {
+                if (record.Status == "Present")
+                    attendanceScore += 1;
+                else if (record.Status == "Half Day")
+                    attendanceScore += 0.5;
+            }
+
+            int daysInMonth = DateTime.DaysInMonth(year, month);
+
+            int workingDays = 0;
+
+            for (int day = 1; day <= daysInMonth; day++)
+            {
+                DateTime date = new DateTime(year, month, day);
+                if (date.DayOfWeek != DayOfWeek.Sunday)
+                    workingDays++;
+            }
+
+            if (workingDays == 0)
                 return 0;
 
-            var presentDays = records.Count(a => a.LogoutTime != null);
-            var totalDays = records.Count;
-
-            double percentage = ((double)presentDays / totalDays) * 100;
+            double percentage = (attendanceScore / workingDays) * 100;
 
             return Math.Round(percentage, 2);
         }
