@@ -24,7 +24,8 @@ namespace EmployeePayroll.API.Services
             {
                 EmployeeId = employeeId,
                 Date = today,
-                LoginTime = DateTime.Now
+                LoginTime = DateTime.Now,
+                Status = "Logged In"
             };
 
             context.Attendances.Add(attendance);

@@ -58,23 +58,7 @@ namespace EmployeePayroll.API.Controllers
 
             return Ok(new { AttendancePercentage = percentage });
         }
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
-        {
-            var user = context.Users
-                .FirstOrDefault(u =>
-                    u.Email == request.Email &&
-                    u.PasswordHash == request.Password);
-
-            if (user == null)
-                return BadRequest(new { message = "Invalid email or password" });
-
-            return Ok(new
-            {
-                employeeId = user.EmployeeId,  // now nullable
-                role = user.Role
-            });
-        }
+        
         [HttpGet("today")]
         public async Task<IActionResult> GetTodayAttendance()
         {

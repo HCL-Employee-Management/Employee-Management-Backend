@@ -21,6 +21,7 @@ namespace EmployeePayroll.API
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<AttendanceService>();
             builder.Services.AddScoped<LeaveService>();
+            builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<IPayrollService, PayrollService>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
