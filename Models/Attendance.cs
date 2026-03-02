@@ -16,4 +16,26 @@
         public string Email { get; set; }
         public string Password { get; set; }
     }
+
+
+
+    //public async Task AddEmployeeAsync(Employee employee)
+    //    {
+    //        // 1. Save Employee
+    //        context.Employees.Add(employee);
+    //        await context.SaveChangesAsync();
+
+    //        // 2. Create Login Account Automatically
+    //        var user = new User
+    //        {
+    //            Email = employee.Email,
+    //            PasswordHash = "1234", // temporary default password
+    //            Role = employee.Role,
+    //            EmployeeId = employee.EmployeeId
+    //        };
+
+    //        context.Users.Add(user);
+    //        await context.SaveChangesAsync();
+    //    }
 }
+
