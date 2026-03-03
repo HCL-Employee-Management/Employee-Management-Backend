@@ -11,7 +11,7 @@
         public decimal Deduction { get; set; }
         public decimal Bonus { get; set; }
         public decimal NetSalary { get; set; }
-
+        public string Status { get; set; } = "Pending";
         public Employee Employee { get; set; }
     }
 }

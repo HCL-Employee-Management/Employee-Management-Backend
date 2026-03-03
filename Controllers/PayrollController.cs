@@ -1,6 +1,4 @@
-﻿using EmployeePayroll.API.DTOs;
-using EmployeePayroll.API.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
+﻿using EmployeePayroll.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeePayroll.API.Controllers
@@ -16,25 +14,51 @@ namespace EmployeePayroll.API.Controllers
             _service = service;
         }
 
+        // Get Payroll for Month
+        [HttpGet]
+        public async Task<IActionResult> Get(string month, int year)
+        {
+            var result = await _service.GetPayrollAsync(month, year);
+            return Ok(result);
+        }
+
+        // Apply Bonus To All
+        [HttpPost("apply-bonus-all")]
+        public async Task<IActionResult> ApplyBonusToAll(string month, int year, decimal bonus)
+        {
+            await _service.ApplyBonusToAllAsync(month, year, bonus);
+            return Ok(new { message = "Bonus Applied" });
+        }
+
+        // Add Bonus Single
+        [HttpPost("add-bonus/{payrollId}")]
+        public async Task<IActionResult> AddBonus(int payrollId, decimal bonus)
+        {
+            await _service.AddBonusAsync(payrollId, bonus);
+            return Ok(new { message = "Bonus Added" });
+        }
+
+        // Pay Single
+        [HttpPost("pay/{payrollId}")]
+        public async Task<IActionResult> Pay(int payrollId)
+        {
+            await _service.PayAsync(payrollId);
+            return Ok(new { message = "Paid" });
+        }
+
+        // Pay All
+        [HttpPost("pay-all")]
+        public async Task<IActionResult> PayAll(string month, int year)
+        {
+            await _service.PayAllAsync(month, year);
+            return Ok(new { message = "All Paid" });
+        }
+
         [HttpPost("generate")]
-        public async Task<IActionResult> GeneratePayroll(PayrollDTO dto)
+        public async Task<IActionResult> Generate(string month, int year)
         {
-            var result = await _service.GeneratePayroll(dto);
-            return Ok(result);
-        }
-
-        [HttpGet("employee/{id}")]
-        public async Task<IActionResult> GetEmployeePayroll(int id)
-        {
-            var result = await _service.GetPayrollByEmployee(id);
-            return Ok(result);
-        }
-
-        [HttpGet("attendance-percentage")]
-        public IActionResult GetAttendancePercentage(int employeeId, int month, int year)
-        {
-            var percentage = _service.CalculateAttendancePercentage(employeeId, month, year);
-            return Ok(percentage);
+            await _service.GeneratePayrollAsync(month, year);
+            return Ok(new { message = "Payroll Generated" });
         }
     }
 }
