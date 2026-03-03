@@ -1,9 +1,8 @@
 ﻿using EmployeePayroll.API.Data;
 using EmployeePayroll.API.DTOs;
 using EmployeePayroll.API.Models;
-using EmployeePayroll.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
+using System;
 
 namespace EmployeePayroll.API.Services
 {
@@ -16,84 +15,124 @@ namespace EmployeePayroll.API.Services
             _context = context;
         }
 
-        public async Task<Payroll> GeneratePayroll(PayrollDTO dto)
+        public async Task<List<PayrollDto>> GetPayrollAsync(string month, int year)
         {
-            // Get Employee
-            var employee = await _context.Employees
-                .FirstOrDefaultAsync(e => e.EmployeeId == dto.EmployeeId);
-
-            if (employee == null)
-                throw new Exception("Employee not found");
-
-            // Convert Month string to month number safely
-            int monthNumber = DateTime.ParseExact(
-                dto.Month,
-                "MMMM",
-                CultureInfo.InvariantCulture).Month;
-
-            // Check if payroll already exists
-            var existingPayroll = await _context.Payrolls
-                .FirstOrDefaultAsync(p =>
-                    p.EmployeeId == dto.EmployeeId &&
-                    p.Month == dto.Month &&
-                    p.Year == dto.Year);
-
-            if (existingPayroll != null)
-                throw new Exception("Payroll already generated for this month");
-
-            // Count approved leave days for that month and year
-            var leaveDays = await _context.Leaves
-                .Where(l => l.EmployeeId == dto.EmployeeId
-                            && l.Status == "Approved"
-                            && l.FromDate.Month == monthNumber
-                            && l.FromDate.Year == dto.Year)
-                .CountAsync();
-
-            // Salary Calculation
-            decimal perDaySalary = employee.BasicSalary / 30;
-            decimal deduction = perDaySalary * leaveDays;
-            decimal netSalary = employee.BasicSalary - deduction + dto.Bonus;
-
-            var payroll = new Payroll
-            {
-                EmployeeId = dto.EmployeeId,
-                Month = dto.Month,
-                Year = dto.Year,
-                BasicSalary = employee.BasicSalary,
-                LeaveDays = leaveDays,
-                Deduction = Math.Round(deduction, 2),
-                Bonus = dto.Bonus,
-                NetSalary = Math.Round(netSalary, 2)
-            };
-
-            _context.Payrolls.Add(payroll);
-            await _context.SaveChangesAsync();
-
-            return payroll;
-        }
-
-        public async Task<IEnumerable<Payroll>> GetPayrollByEmployee(int employeeId)
-        {
-            return await _context.Payrolls
-                .Where(p => p.EmployeeId == employeeId)
-                .OrderByDescending(p => p.Year)
-                .ThenByDescending(p => p.Month)
+            var payrolls = await _context.Payrolls
+                .Include(p => p.Employee)
+                .Where(p => p.Month == month && p.Year == year)
                 .ToListAsync();
+
+            return payrolls.Select(p => new PayrollDto
+            {
+                PayrollId = p.PayrollId,
+                EmployeeId = p.EmployeeId,
+                EmployeeName = p.Employee.FirstName + " " + p.Employee.LastName,
+                Month = p.Month,
+                Year = p.Year,
+                BasicSalary = p.BasicSalary,
+                LeaveDays = p.LeaveDays,
+                Deduction = p.Deduction,
+                Bonus = p.Bonus,
+                NetSalary = p.NetSalary,
+                Status = p.Status ?? "Pending"
+            }).ToList();
         }
 
-        public decimal CalculateAttendancePercentage(int employeeId, int month, int year)
+        public async Task ApplyBonusToAllAsync(string month, int year, decimal bonus)
         {
-            var totalDays = DateTime.DaysInMonth(year, month);
+            var payrolls = await _context.Payrolls
+                .Where(p => p.Month == month && p.Year == year && p.Status == "Pending")
+                .ToListAsync();
 
-            if (totalDays == 0)
-                return 0;
+            foreach (var p in payrolls)
+            {
+                p.Bonus += bonus;
+                p.NetSalary = p.BasicSalary - p.Deduction + p.Bonus;
+            }
 
-            var presentDays = _context.Attendances
-                .Count(a => a.EmployeeId == employeeId
-                            && a.Date.Month == month
-                            && a.Date.Year == year);
+            await _context.SaveChangesAsync();
+        }
 
-            return Math.Round(((decimal)presentDays / totalDays) * 100, 2);
+        public async Task AddBonusAsync(int payrollId, decimal bonus)
+        {
+            var payroll = await _context.Payrolls.FindAsync(payrollId);
+            if (payroll == null) return;
+
+            payroll.Bonus += bonus;
+            payroll.NetSalary = payroll.BasicSalary - payroll.Deduction + payroll.Bonus;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task PayAsync(int payrollId)
+        {
+            var payroll = await _context.Payrolls.FindAsync(payrollId);
+            if (payroll == null) return;
+
+            payroll.Status = "Paid";
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task PayAllAsync(string month, int year)
+        {
+            var payrolls = await _context.Payrolls
+                .Where(p => p.Month == month && p.Year == year)
+                .ToListAsync();
+
+            foreach (var p in payrolls)
+            {
+                p.Status = "Paid";
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task GeneratePayrollAsync(string month, int year)
+        {
+            var employees = await _context.Employees.ToListAsync();
+
+            int monthNumber = DateTime.ParseExact(month, "MMMM",
+                System.Globalization.CultureInfo.InvariantCulture).Month;
+
+            foreach (var emp in employees)
+            {
+                bool exists = await _context.Payrolls
+                    .AnyAsync(p => p.EmployeeId == emp.EmployeeId
+                                && p.Month == month
+                                && p.Year == year);
+
+                if (!exists)
+                {
+                    // ✅ Get approved leaves for this employee in this month
+                    var leaveDays = await _context.Leaves
+                        .Where(l => l.EmployeeId == emp.EmployeeId
+                                 && l.Status == "Approved"
+                                 && l.FromDate.Month == monthNumber
+                                 && l.FromDate.Year == year)
+                        .SumAsync(l => EF.Functions.DateDiffDay(l.FromDate, l.ToDate) + 1);
+
+                    // ✅ Per day salary calculation
+                    decimal perDaySalary = emp.BasicSalary / 30;
+                    decimal deduction = perDaySalary * leaveDays;
+
+                    var payroll = new Payroll
+                    {
+                        EmployeeId = emp.EmployeeId,
+                        Month = month,
+                        Year = year,
+                        BasicSalary = emp.BasicSalary,
+                        LeaveDays = leaveDays,
+                        Deduction = deduction,
+                        Bonus = 0,
+                        NetSalary = emp.BasicSalary - deduction,
+                        Status = "Pending"
+                    };
+
+                    _context.Payrolls.Add(payroll);
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

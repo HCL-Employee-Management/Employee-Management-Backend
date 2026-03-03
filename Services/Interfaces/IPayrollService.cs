@@ -1,12 +1,14 @@
 ﻿using EmployeePayroll.API.DTOs;
-using EmployeePayroll.API.Models;
 
-namespace EmployeePayroll.API.Services.Interfaces
+namespace EmployeePayroll.API.Services
 {
     public interface IPayrollService
     {
-        Task<Payroll> GeneratePayroll(PayrollDTO dto);
-        Task<IEnumerable<Payroll>> GetPayrollByEmployee(int employeeId);
-        decimal CalculateAttendancePercentage(int employeeId, int month, int year);
+        Task<List<PayrollDto>> GetPayrollAsync(string month, int year);
+        Task ApplyBonusToAllAsync(string month, int year, decimal bonus);
+        Task AddBonusAsync(int payrollId, decimal bonus);
+        Task PayAsync(int payrollId);
+        Task PayAllAsync(string month, int year);
+        Task GeneratePayrollAsync(string month, int year);  
     }
 }
