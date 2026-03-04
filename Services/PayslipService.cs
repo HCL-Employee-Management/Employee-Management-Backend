@@ -33,7 +33,9 @@ public class PayslipService : IPayslipService
             Deduction = p.Deduction,
             Bonus = p.Bonus,
             NetSalary = p.NetSalary,
-            Status = p.Status
+            Status = p.Status,
+            Department = p.Employee.Department,
+            Email = p.Employee.Email
         }).ToList();
     }
 }

@@ -16,5 +16,8 @@
         public decimal NetSalary { get; set; }
 
         public string Status { get; set; }  // Pending / Paid
+
+        public string Department { get; set; }
+        public string Email { get; set; }
     }
 }
