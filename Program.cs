@@ -22,6 +22,7 @@ namespace EmployeePayroll.API
             builder.Services.AddScoped<AttendanceService>();
             builder.Services.AddScoped<LeaveService>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddHostedService<AutoLogoutService>();
             builder.Services.AddScoped<IPayrollService, PayrollService>();
             builder.Services.AddScoped<IPayslipService, PayslipService>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
