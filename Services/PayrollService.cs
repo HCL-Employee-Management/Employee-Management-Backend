@@ -91,45 +91,77 @@ namespace EmployeePayroll.API.Services
         {
             var employees = await _context.Employees.ToListAsync();
 
-            int monthNumber = DateTime.ParseExact(month, "MMMM",
+            int monthNumber = DateTime.ParseExact(
+                month,
+                "MMMM",
                 System.Globalization.CultureInfo.InvariantCulture).Month;
+
+            int daysInMonth = DateTime.DaysInMonth(year, monthNumber);
+
+            int workingDays = 0;
+
+            for (int i = 1; i <= daysInMonth; i++)
+            {
+                DateTime date = new DateTime(year, monthNumber, i);
+
+                if (date.DayOfWeek != DayOfWeek.Sunday)
+                    workingDays++;
+            }
 
             foreach (var emp in employees)
             {
-                bool exists = await _context.Payrolls
-                    .AnyAsync(p => p.EmployeeId == emp.EmployeeId
-                                && p.Month == month
-                                && p.Year == year);
+                var payroll = await _context.Payrolls.FirstOrDefaultAsync(p =>
+                    p.EmployeeId == emp.EmployeeId &&
+                    p.Month == month &&
+                    p.Year == year);
 
-                if (!exists)
+                // Get latest attendance
+                var attendance = await _context.Attendances
+                    .Where(a =>
+                        a.EmployeeId == emp.EmployeeId &&
+                        a.Date.Month == monthNumber &&
+                        a.Date.Year == year)
+                    .ToListAsync();
+
+                int presentDays = attendance.Count(a => a.Status == "Present");
+
+                int halfDays = attendance.Count(a => a.Status == "Half Day");
+
+                int absentDays = workingDays - presentDays - halfDays;
+
+                decimal perDaySalary = emp.BasicSalary / workingDays;
+
+                decimal fullSalary = presentDays * perDaySalary;
+
+                decimal halfSalary = halfDays * (perDaySalary * 0.5m);
+
+                decimal deduction =
+                    (absentDays * perDaySalary) +
+                    (halfDays * perDaySalary * 0.5m);
+
+                decimal netSalary = fullSalary + halfSalary;
+
+                if (payroll == null)
                 {
-                    // ✅ Get approved leaves for this employee in this month
-                    var leaveDays = await _context.Leaves
-                        .Where(l => l.EmployeeId == emp.EmployeeId
-                                 && l.Status == "Approved"
-                                 && l.FromDate.Month == monthNumber
-                                 && l.FromDate.Year == year)
-                        .SumAsync(l => EF.Functions.DateDiffDay(l.FromDate, l.ToDate) + 1);
-
-                    // ✅ Per day salary calculation
-                    decimal perDaySalary = emp.BasicSalary / 30;
-                    decimal deduction = perDaySalary * leaveDays;
-
-                    var payroll = new Payroll
+                    // Create new payroll
+                    payroll = new Payroll
                     {
                         EmployeeId = emp.EmployeeId,
                         Month = month,
-                        Year = year,
-                        BasicSalary = emp.BasicSalary,
-                        LeaveDays = leaveDays,
-                        Deduction = deduction,
-                        Bonus = 0,
-                        NetSalary = emp.BasicSalary - deduction,
-                        Status = "Pending"
+                        Year = year
                     };
 
                     _context.Payrolls.Add(payroll);
                 }
+
+                // Update payroll every time
+                payroll.BasicSalary = emp.BasicSalary;
+                payroll.LeaveDays = absentDays;
+                payroll.Deduction = deduction;
+                payroll.NetSalary = netSalary;
+
+                if (string.IsNullOrEmpty(payroll.Status))
+                    payroll.Status = "Pending";
             }
 
             await _context.SaveChangesAsync();
