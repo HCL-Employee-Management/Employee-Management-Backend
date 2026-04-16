@@ -72,7 +72,7 @@ namespace EmployeePayroll.API.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -98,6 +98,9 @@ namespace EmployeePayroll.API.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("EmployeeId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Employees");
                 });

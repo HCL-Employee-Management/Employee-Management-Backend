@@ -14,15 +14,17 @@ namespace EmployeePayroll.API.Controllers
         {
             _authService = authService;
         }
-
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                return BadRequest("Email and Password are required.");
+            }
+
             try
             {
-                var result = await _authService
-                    .LoginAsync(request.Email, request.Password);
-
+                var result = await _authService.LoginAsync(request.Email, request.Password);
                 return Ok(result);
             }
             catch (Exception ex)

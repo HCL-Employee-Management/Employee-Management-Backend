@@ -5,7 +5,7 @@
 namespace EmployeePayroll.API.Migrations
 {
     /// <inheritdoc />
-    public partial class payroll : Migration
+    public partial class PayRoll : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

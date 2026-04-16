@@ -26,7 +26,7 @@ namespace EmployeePayroll.API.Services
             {
                 PayrollId = p.PayrollId,
                 EmployeeId = p.EmployeeId,
-                EmployeeName = p.Employee.FirstName + " " + p.Employee.LastName,
+                EmployeeName = (p.Employee?.FirstName ?? "") + " " + (p.Employee?.LastName ?? ""),
                 Month = p.Month,
                 Year = p.Year,
                 BasicSalary = p.BasicSalary,

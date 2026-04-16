@@ -25,7 +25,7 @@ public class PayslipService : IPayslipService
         {
             PayrollId = p.PayrollId,
             EmployeeId = p.EmployeeId,
-            EmployeeName = p.Employee.FirstName + " " + p.Employee.LastName,
+            EmployeeName = (p.Employee?.FirstName ?? "") + " " + (p.Employee?.LastName ?? ""),
             Month = p.Month,
             Year = p.Year,
             BasicSalary = p.BasicSalary,
@@ -33,9 +33,9 @@ public class PayslipService : IPayslipService
             Deduction = p.Deduction,
             Bonus = p.Bonus,
             NetSalary = p.NetSalary,
-            Status = p.Status,
-            Department = p.Employee.Department,
-            Email = p.Employee.Email
+            Status = p.Status ?? "Pending",
+            Department = p.Employee?.Department ?? "",
+            Email = p.Employee?.Email ?? ""
         }).ToList();
     }
 }

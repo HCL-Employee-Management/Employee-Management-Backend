@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeePayroll.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260304054607_payroll")]
-    partial class PayRoll
+    [Migration("20260307174334_Employee")]
+    partial class Employee
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -75,7 +75,7 @@ namespace EmployeePayroll.API.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -101,6 +101,9 @@ namespace EmployeePayroll.API.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("EmployeeId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Employees");
                 });

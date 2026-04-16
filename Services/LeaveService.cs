@@ -79,7 +79,9 @@ namespace EmployeePayroll.API.Services
                 .Select(l => new
                 {
                     l.LeaveId,
-                    employeeName = l.Employee.FirstName + " " + l.Employee.LastName,
+                    employeeName = l.Employee != null
+                                 ? l.Employee.FirstName + " " + l.Employee.LastName
+                                 : "Unknown Employee",
                     l.FromDate,
                     l.ToDate,
                     l.Reason,

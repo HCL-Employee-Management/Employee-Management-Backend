@@ -18,6 +18,11 @@ namespace EmployeePayroll.API.Controllers
         [HttpPost("apply")]
         public async Task<IActionResult> ApplyLeave([FromBody] LeaveRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Reason))
+            {
+                return BadRequest("Reason is required.");
+            }
+
             try
             {
                 await _leaveService.ApplyLeaveAsync(

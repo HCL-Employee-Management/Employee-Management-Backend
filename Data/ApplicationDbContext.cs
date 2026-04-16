@@ -43,6 +43,10 @@ namespace EmployeePayroll.API.Data
                 .WithOne()
                 .HasForeignKey<User>(u => u.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Email)
+                .IsUnique();
         }
     }
 }
